@@ -1,0 +1,89 @@
+generator client {
+	provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum planType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum ComponentType {
+  text
+  timestamp
+  div
+}
+
+// defines the user data model
+model users {
+  uid                                         String @id @default(uuid())
+  email                                       String @unique
+  hasAuthenticatedEmail                       Boolean @default(false) // if the user has authenticated their email
+  firstName                                   String?
+  lastName                                    String?
+
+  subscription                                subscription?
+
+  createdAt                                   DateTime @default(now())
+  updatedAt                                   DateTime @updatedAt
+  lastLogin                                   DateTime?
+  websites                                    websites[]
+}
+
+model subscription {
+  transactionId                               String @id @unique // Define transactionId as primary key
+  subscriptionActive                          Boolean
+  paymentEmail                                String
+  planType                                    planType
+  dateOfPurchase                              DateTime  
+  dateOfExpiry                                DateTime   
+
+  user                                        users      @relation(fields: [userId], references: [uid])
+  userId                                      String     @unique
+
+  numOfWebsites                               Int
+}
+
+model websites {
+  owner                                       users         @relation(fields: [userId], references: [uid])
+  userId                                      String
+
+  websiteId                                   String        @id
+  websiteName                                 String        
+  websiteUrl                                  String        
+  websiteLogo                                 String
+
+  websitePrimaryColor                         String 
+  websiteSecondaryColor                       String
+  websiteBackgroundColor                      String        @default("#ffffff")
+
+  hasBeenPublished                            Boolean       @default(false)
+
+  createdAt                                   DateTime      @default(now())
+  lastUpdated                                 DateTime      @updatedAt
+  lastUpdatedUid                              String        @default("")
+
+}
+
+model earlyAccess {
+  email                                      String @id 
+  createdAt                                  DateTime @default(now())
+  updatedAt                                  DateTime @updatedAt
+}
+
+model Components {
+  type                                        ComponentType @id
+  name                                        String
+  description                                 String
+  properties                                  String[]
+  createdAt                                   DateTime @default(now())
+  updatedAt                                   DateTime @updatedAt
+  
+  data                                        Json
+}
